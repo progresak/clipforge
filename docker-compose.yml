@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  kling-bot:
+    build: .
+    container_name: kling-telegram-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persist budget and generation logs
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production

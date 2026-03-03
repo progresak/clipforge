@@ -1,0 +1,39 @@
+{
+  "name": "kling-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for generating AI videos with Kling AI - text-to-video, image-to-video, with optional Claude AI prompt enhancement",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "kling",
+    "ai",
+    "video",
+    "text-to-video",
+    "image-to-video",
+    "video-generation",
+    "artificial-intelligence"
+  ],
+  "author": "progresak",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/progresak/kling-telegram-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/progresak/kling-telegram-bot/issues"
+  },
+  "homepage": "https://github.com/progresak/kling-telegram-bot#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
