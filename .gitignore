@@ -32,3 +32,4 @@ yarn-error.log*
 tmp/
 temp/
 *.tmp
+MIGRATION-COMPLETE.md
