@@ -1,29 +1,32 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
-# Install ffmpeg for video processing
-RUN apk add --no-cache ffmpeg
-
-# Create app directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json ./
+COPY package.json package-lock.json* ./
+RUN npm install
 
-# Install dependencies
+COPY tsconfig.json ./
+COPY src/ ./src/
+
+RUN npm run build
+
+FROM node:20-alpine
+
+RUN apk add --no-cache ffmpeg
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
 RUN npm install --production
 
-# Copy application source
-COPY src/ ./src/
+COPY --from=builder /app/dist/ ./dist/
 COPY prompts/ ./prompts/
 
-# Create data directory for persistence
 RUN mkdir -p /app/data
 
-# Run as non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
     chown -R nodejs:nodejs /app
 USER nodejs
 
-# Start the bot
-CMD ["node", "src/index.js"]
+CMD ["node", "dist/index.js"]

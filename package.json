@@ -1,11 +1,15 @@
 {
   "name": "clipforge",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Telegram bot for generating AI videos with Kling AI - text-to-video, image-to-video, with optional Claude AI prompt enhancement",
-  "main": "src/index.js",
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch & node --watch dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "telegram",
@@ -16,7 +20,8 @@
     "text-to-video",
     "image-to-video",
     "video-generation",
-    "artificial-intelligence"
+    "artificial-intelligence",
+    "typescript"
   ],
   "author": "progresak",
   "license": "MIT",
@@ -32,6 +37,11 @@
     "node-telegram-bot-api": "^0.66.0",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/node-telegram-bot-api": "^0.64.14",
+    "typescript": "^5.7.0"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -53,8 +53,9 @@ That's it! Your bot is now running.
    nano .env  # Fill in your API keys
    ```
 
-3. **Run**
+3. **Build & Run**
    ```bash
+   npm run build
    npm start
    ```
 
@@ -183,13 +184,19 @@ water, distant seagulls, crashing waves. Cinematic realism, film grain.
 
 ## 🏗️ Architecture
 
+The project is written in **TypeScript** with strict type-checking enabled.
+
 ```
 src/
-├── index.js              # Main bot logic & command handlers
-├── kling-api.js          # Kling AI API client & JWT auth
-├── prompt-enhancer.js    # Claude AI integration (API + CLI)
-├── budget-tracker.js     # Daily spending tracker
-└── utils.js              # Helper functions
+├── index.ts              # Main bot logic & command handlers
+├── kling-api.ts          # Kling AI API client & JWT auth
+├── prompt-enhancer.ts    # Claude AI integration (API + CLI)
+├── budget-tracker.ts     # Daily spending tracker
+├── utils.ts              # Helper functions
+└── types/
+    ├── index.ts          # Type re-exports
+    ├── kling.ts          # Kling AI API types
+    └── config.ts         # App config & settings types
 
 prompts/
 └── enhance-video.txt     # System prompt for Claude enhancement
