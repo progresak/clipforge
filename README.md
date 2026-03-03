@@ -19,7 +19,7 @@ A powerful Telegram bot that generates stunning AI videos using Kling AI's state
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/progresak/kling-telegram-bot.git
+   git clone https://github.com/progresak/clipforge.git
    cd kling-telegram-bot
    ```
 
@@ -42,7 +42,7 @@ That's it! Your bot is now running.
 
 1. **Clone and install**
    ```bash
-   git clone https://github.com/progresak/kling-telegram-bot.git
+   git clone https://github.com/progresak/clipforge.git
    cd kling-telegram-bot
    npm install
    ```
@@ -267,7 +267,7 @@ The bot tracks daily spending automatically:
 
 Contributions welcome! Feel free to:
 
-- 🐛 Report bugs via [GitHub Issues](https://github.com/progresak/kling-telegram-bot/issues)
+- 🐛 Report bugs via [GitHub Issues](https://github.com/progresak/clipforge/issues)
 - 💡 Suggest features
 - 🔧 Submit pull requests
 - ⭐ Star the repo if you find it useful!
