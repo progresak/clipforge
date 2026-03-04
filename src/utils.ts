@@ -55,3 +55,30 @@ export function getCurrentDate(): string {
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+/**
+ * Detect the closest Kling-supported aspect ratio from image dimensions.
+ * Kling supports: 16:9, 9:16, 1:1
+ */
+export function detectAspectRatio(width: number, height: number): '16:9' | '9:16' | '1:1' {
+  const ratio = width / height;
+  // 16:9 = 1.778, 1:1 = 1.0, 9:16 = 0.5625
+  const options: Array<{ ar: '16:9' | '9:16' | '1:1'; value: number }> = [
+    { ar: '16:9', value: 16 / 9 },
+    { ar: '1:1', value: 1 },
+    { ar: '9:16', value: 9 / 16 },
+  ];
+
+  let closest = options[0]!;
+  let minDiff = Math.abs(ratio - closest.value);
+
+  for (const opt of options) {
+    const diff = Math.abs(ratio - opt.value);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = opt;
+    }
+  }
+
+  return closest.ar;
+}

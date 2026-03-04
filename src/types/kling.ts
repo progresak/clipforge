@@ -15,6 +15,7 @@ export type KlingModel = 'kling-v1' | 'kling-v1-5' | 'kling-v1-6' | 'kling-v2' |
 export type KlingMode = 'std' | 'pro';
 export type KlingDuration = 5 | 10;
 export type KlingAspectRatio = '16:9' | '9:16' | '1:1';
+export type AspectRatioSetting = KlingAspectRatio | 'auto';
 export type KlingSoundSetting = 'on' | 'off';
 export type KlingTaskStatus = 'submitted' | 'processing' | 'succeed' | 'failed';
 export type KlingTaskType = 'text2video' | 'image2video';

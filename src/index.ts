@@ -7,8 +7,8 @@ import dotenv from 'dotenv';
 import { KlingAPI } from './kling-api.js';
 import { PromptEnhancer } from './prompt-enhancer.js';
 import { BudgetTracker } from './budget-tracker.js';
-import { appendLog, formatCurrency } from './utils.js';
-import type { AppConfig, UserSettings, KlingDuration, KlingMode, KlingAspectRatio } from './types/index.js';
+import { appendLog, formatCurrency, detectAspectRatio } from './utils.js';
+import type { AppConfig, UserSettings, KlingDuration, KlingMode, KlingAspectRatio, AspectRatioSetting } from './types/index.js';
 
 dotenv.config();
 
@@ -37,7 +37,7 @@ function loadConfig(): AppConfig {
     defaultModel: (process.env['DEFAULT_MODEL'] as AppConfig['defaultModel']) || 'kling-v2-6',
     defaultMode: (process.env['DEFAULT_MODE'] as KlingMode) || 'pro',
     defaultDuration: (parseInt(process.env['DEFAULT_DURATION'] ?? '5', 10) as KlingDuration) || 5,
-    defaultAspectRatio: (process.env['DEFAULT_ASPECT_RATIO'] as KlingAspectRatio) || '16:9',
+    defaultAspectRatio: (process.env['DEFAULT_ASPECT_RATIO'] as AspectRatioSetting) || 'auto',
   };
 
   if (!config.telegramBotToken || !config.klingAccessKey || !config.klingSecretKey) {
@@ -117,7 +117,7 @@ bot.onText(/\/start/, (msg) => {
     `/budget - Check today's spending\n` +
     `/settings - View current settings\n` +
     `/duration 5|10 - Set video duration\n` +
-    `/aspect 16:9|9:16|1:1 - Set aspect ratio\n` +
+    `/aspect 16:9|9:16|1:1|auto - Set aspect ratio (auto = match image)\n` +
     `/mode std|pro - Set quality mode\n` +
     `/sound - Toggle sound generation 🔊/🔇\n` +
     `/enhance - Toggle AI prompt enhancement\n\n` +
@@ -144,7 +144,7 @@ bot.onText(/\/help/, (msg) => {
     `/budget - Show daily budget status\n` +
     `/settings - Show your current settings\n` +
     `/duration 5|10 - Set default duration (seconds)\n` +
-    `/aspect 16:9|9:16|1:1 - Set aspect ratio\n` +
+    `/aspect 16:9|9:16|1:1|auto - Set aspect ratio (auto = match image)\n` +
     `/mode std|pro - Set quality mode\n` +
     `/sound - Toggle sound generation 🔊/🔇\n` +
     `/enhance - Toggle AI prompt enhancement (Claude)\n\n` +
@@ -219,16 +219,17 @@ bot.onText(/\/aspect (.+)/, (msg, match) => {
     return;
   }
 
-  const ratio = match?.[1] ?? '';
-  const validRatios: KlingAspectRatio[] = ['16:9', '9:16', '1:1'];
-  if (!validRatios.includes(ratio as KlingAspectRatio)) {
-    bot.sendMessage(msg.chat.id, '❌ Aspect ratio must be 16:9, 9:16, or 1:1');
+  const ratio = match?.[1]?.trim() ?? '';
+  const validRatios: AspectRatioSetting[] = ['16:9', '9:16', '1:1', 'auto'];
+  if (!validRatios.includes(ratio as AspectRatioSetting)) {
+    bot.sendMessage(msg.chat.id, '❌ Aspect ratio must be 16:9, 9:16, 1:1, or auto');
     return;
   }
 
   const settings = getUserSettings(userId);
-  settings.aspectRatio = ratio as KlingAspectRatio;
-  bot.sendMessage(msg.chat.id, `✅ Default aspect ratio set to ${ratio}`);
+  settings.aspectRatio = ratio as AspectRatioSetting;
+  const label = ratio === 'auto' ? 'auto (matches image)' : ratio;
+  bot.sendMessage(msg.chat.id, `✅ Default aspect ratio set to ${label}`);
 });
 
 bot.onText(/\/mode (.+)/, (msg, match) => {
@@ -308,10 +309,18 @@ bot.on('photo', async (msg) => {
   }
 
   try {
+    // Auto-detect aspect ratio from image dimensions
+    const settings = getUserSettings(userId);
+    let arOverride: KlingAspectRatio | undefined;
+    if (settings.aspectRatio === 'auto' && photo.width && photo.height) {
+      arOverride = detectAspectRatio(photo.width, photo.height);
+      bot.sendMessage(chatId, `📐 Auto-detected aspect ratio: ${arOverride} (from ${photo.width}×${photo.height})`);
+    }
+
     const fileLink = await bot.getFileLink(photo.file_id);
     const response = await axios.get<ArrayBuffer>(fileLink, { responseType: 'arraybuffer' });
     const base64Image = Buffer.from(response.data).toString('base64');
-    await generateVideo(chatId, userId, caption, base64Image);
+    await generateVideo(chatId, userId, caption, base64Image, arOverride);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('Error handling photo:', error);
@@ -345,9 +354,12 @@ async function generateVideo(
   chatId: number,
   userId: number,
   userPrompt: string,
-  imageBase64: string | null
+  imageBase64: string | null,
+  overrideAspectRatio?: KlingAspectRatio
 ): Promise<void> {
   const settings = getUserSettings(userId);
+  const effectiveAspectRatio: KlingAspectRatio = overrideAspectRatio
+    ?? (settings.aspectRatio === 'auto' ? '16:9' : settings.aspectRatio);
   const cost = KlingAPI.calculateCost(config.defaultModel, settings.mode, settings.duration);
 
   if (!budgetTracker.canAfford(cost)) {
@@ -391,7 +403,7 @@ async function generateVideo(
   const statusMsg = await bot.sendMessage(
     chatId,
     `🎬 Generating ${isI2V ? 'image-to-video' : 'text-to-video'}...\n\n` +
-      `⚙️ ${settings.mode} mode | ${settings.duration}s | ${settings.aspectRatio} | ${settings.sound ? '🔊' : '🔇'}\n` +
+      `⚙️ ${settings.mode} mode | ${settings.duration}s | ${effectiveAspectRatio} | ${settings.sound ? '🔊' : '🔇'}\n` +
       `💰 Cost: ${formatCurrency(cost)}\n\n` +
       `⏳ This may take 1-3 minutes...`
   );
@@ -401,7 +413,7 @@ async function generateVideo(
       model: config.defaultModel,
       mode: settings.mode,
       duration: settings.duration,
-      aspectRatio: settings.aspectRatio,
+      aspectRatio: effectiveAspectRatio,
       sound: settings.sound,
     };
 
@@ -450,7 +462,7 @@ async function generateVideo(
     fs.writeFileSync(tmpPath, Buffer.from(videoResponse.data));
 
     await bot.sendVideo(chatId, tmpPath, {
-      caption: `🎬 "${userPrompt}"\n\n⚙️ ${settings.mode} • ${settings.duration}s • ${settings.aspectRatio}`,
+      caption: `🎬 "${userPrompt}"\n\n⚙️ ${settings.mode} • ${settings.duration}s • ${effectiveAspectRatio}`,
     });
 
     fs.unlinkSync(tmpPath);

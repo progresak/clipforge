@@ -1,4 +1,4 @@
-import type { KlingModel, KlingMode, KlingDuration, KlingAspectRatio } from './kling.js';
+import type { KlingModel, KlingMode, KlingDuration, KlingAspectRatio, AspectRatioSetting } from './kling.js';
 
 export interface AppConfig {
   telegramBotToken: string;
@@ -9,12 +9,12 @@ export interface AppConfig {
   defaultModel: KlingModel;
   defaultMode: KlingMode;
   defaultDuration: KlingDuration;
-  defaultAspectRatio: KlingAspectRatio;
+  defaultAspectRatio: AspectRatioSetting;
 }
 
 export interface UserSettings {
   duration: KlingDuration;
-  aspectRatio: KlingAspectRatio;
+  aspectRatio: AspectRatioSetting;
   mode: KlingMode;
   sound: boolean;
 }
